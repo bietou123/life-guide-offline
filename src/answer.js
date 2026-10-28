@@ -41,13 +41,16 @@ export function answerQuestion(question, mode = 'fast', previousQuestion = '') {
     ? directMatch
     : domainMatch && !results.domains.includes(matches[0]?.item.ch) ? domainMatch : matches[0];
   const primaryText = winner ? `${winner.item.t} ${winner.item.plain}` : '';
-  const missingSpecificTopic = specificTopics.length >= 2 && specificTopics.every((part) => part.length <= 3)
-    && specificTopics.some((part) => !primaryText.includes(part)) && results.top < 50;
-  const supported = winner && (
-    (results.domains.includes(winner.item.ch) && winner.score >= 12) ||
-    (winner.score >= 22 && (winner.coverage >= 0.5 || winner.inTitle > 0))
-  );
-  if (!supported || missingSpecificTopic) {
+  // A domain hint alone cannot answer an unrelated specific topic, e.g. a nodule found at a checkup.
+  const hasUncoveredTopic = results.top < 50 && specificTopics.length >= 2
+    && specificTopics.every((part) => part.length === 2)
+    && specificTopics.some((part) => !primaryText.includes(part));
+  const domainEvidence = winner && results.domains.includes(winner.item.ch) && winner.score >= 12;
+  const subject = specificTopics[0] && tokenize(specificTopics[0])[0];
+  const subjectCovered = !subject || new Set(tokenize(primaryText)).has(subject);
+  const textualEvidence = winner && winner.score >= 22 &&
+    subjectCovered && (winner.coverage >= 0.5 || winner.inTitle > 0);
+  if ((!domainEvidence && !textualEvidence) || hasUncoveredTopic) {
     return {
       found: false,
       lead: '这本指南里暂时找不到能直接回答这个问题的条目。',

@@ -24,9 +24,15 @@ const info = await page.evaluate(() => ({
   w: innerWidth,
   h: innerHeight,
 }));
-console.log(JSON.stringify(info, null, 1));
+const withShot = process.argv.includes('--shot');
+const shot = async (name) => {
+  if (!withShot) return;
+  try { await page.screenshot({ path: path.resolve('shots', name) }); }
+  catch (e) { console.log('screenshot skipped:', e.message.split('\n')[0]); }
+};
 
-await page.screenshot({ path: path.resolve('shots', `${tag}-0.png`) });
+console.log(JSON.stringify(info, null, 1));
+await shot(`${tag}-0.png`);
 
 await page.evaluate(() => document.querySelector('.suggest-card')?.click());
 await new Promise((r) => setTimeout(r, 1600));
@@ -37,7 +43,7 @@ const answer = await page.evaluate(() => ({
   bodyLen: document.querySelector('.msg.ai .ai-body')?.innerText?.length,
 }));
 console.log(JSON.stringify(answer, null, 1));
-await page.screenshot({ path: path.resolve('shots', `${tag}-1.png`) });
+await shot(`${tag}-1.png`);
 
 console.log('console errors:', errors.length ? errors : 'none');
 browser.disconnect();

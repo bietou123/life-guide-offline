@@ -28,6 +28,7 @@ test('answers stay attached to their original chapters', () => {
     ['失眠怎么调整', 3],
     ['安全带有用吗', 1],
     ['被诈骗了怎么办', 8],
+    ['没钱了怎么活下去', 7],
   ]) {
     const reply = answerQuestion(question, 'deep');
     assert.equal(reply.found, true, question);
@@ -58,7 +59,10 @@ test('ordinary layoffs are not labeled as unlawful dismissal', () => {
 });
 
 test('uncovered queries do not invent an answer', () => {
-  for (const question of ['体检发现结节要紧吗', '蜥蜴的饮食偏好是什么', '大学选什么专业好']) {
+  for (const question of [
+    '体检发现结节要紧吗', '蜥蜴的饮食偏好是什么', '大学选什么专业好',
+    '量子纠缠是什么', '苹果手机值得买吗',
+  ]) {
     assert.equal(answerQuestion(question).found, false, question);
   }
 });
