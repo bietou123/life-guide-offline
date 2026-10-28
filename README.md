@@ -38,7 +38,7 @@ npm run sync
 npm run apk
 ```
 
-Windows 上构建出的调试 APK 位于 `android/app/build/outputs/apk/debug/app-debug.apk`。如需生成可持续更新的正式包，在本机设置 `LIFE_GUIDE_KEYSTORE`（私有密钥的绝对路径）、`LIFE_GUIDE_KEYPASS` 和 `LIFE_GUIDE_KEYALIAS`，再在 `android/` 运行 `./gradlew.bat assembleRelease`。正式包位于 `android/app/build/outputs/apk/release/`。仓库不包含 Android SDK、JDK、签名材料或构建缓存；更新同一应用时必须保管好同一密钥。
+Windows 上构建出的调试 APK 位于 `android/app/build/outputs/apk/debug/app-debug.apk`。如需生成可持续更新的正式包，在本机设置 `LIFE_GUIDE_KEYSTORE`（私有密钥的绝对路径）、`LIFE_GUIDE_KEYPASS` 和 `LIFE_GUIDE_KEYALIAS`，再在 `android/` 运行 `./gradlew.bat assembleRelease`。正式包位于 `android/app/build/outputs/apk/release/`。仓库不包含 Android SDK、JDK、签名材料或构建缓存；更新同一应用时必须保管好同一密钥。发行页自 v1.0.2 起使用独立的正式签名；v1.0.0 / v1.0.1 的调试签名包不能直接覆盖升级，卸载旧版会删除其中的本地对话记录。
 
 ## 原作、署名与许可
 
