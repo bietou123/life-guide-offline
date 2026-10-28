@@ -1,0 +1,32 @@
+{
+  "name": "life-guide-app",
+  "version": "1.0.0",
+  "description": "人生指南 · 离线实证生活决策助手（基于《高性价比人生指南》767 条建议）",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test tests/answer.test.mjs",
+    "test:search": "node scripts/test_search.mjs",
+    "test:ui": "node tests/ui.mjs",
+    "data": "python scripts/build_data.py",
+    "sync": "npm run build && npx cap sync android",
+    "apk": "cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/browser": "^6.0.2",
+    "@capacitor/core": "^6.2.1",
+    "lucide": "^1.63.0",
+    "markdown-it": "^15.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
+    "puppeteer-core": "^25.16.0",
+    "vite": "^5.4.11"
+  }
+}

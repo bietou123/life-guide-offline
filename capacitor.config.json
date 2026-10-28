@@ -1,0 +1,12 @@
+{
+  "appId": "top.arrowwood.lifeguide",
+  "appName": "人生指南",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#000000"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
