@@ -8,8 +8,8 @@ const root = path.join(__dirname, '..');
 const items = JSON.parse(fs.readFileSync(path.join(root, 'public/data/items.json'), 'utf8'));
 const idx = JSON.parse(fs.readFileSync(path.join(root, 'public/data/index.json'), 'utf8'));
 
-const { setData, search, tokenize } = await import(pathToFileURL(path.join(root, 'src/search.js')).href);
-const { analyze } = await import(pathToFileURL(path.join(root, 'src/analyze.js')).href);
+const { setData, search } = await import(pathToFileURL(path.join(root, 'src/search.js')).href);
+const { answerQuestion } = await import(pathToFileURL(path.join(root, 'src/answer.js')).href);
 setData(items, idx);
 
 const CASES = [
@@ -63,16 +63,23 @@ for (const [q, expect] of CASES) {
   }
 }
 
-console.log(`\n命中 ${pass}/${CASES.length} = ${((pass / CASES.length) * 100).toFixed(1)}%`);
+console.log(`\n原始检索 top1 章节召回 ${pass}/${CASES.length} = ${((pass / CASES.length) * 100).toFixed(1)}%（不是最终答案准确率）`);
 
-// 抽查答案生成
-console.log('\n===== 答案样本 =====');
-for (const q of ['被公司辞退了该拿多少钱', '租房押金不退怎么办']) {
-  const res = search(q, { topK: 12 });
-  const a = analyze(q, res, { tokenize, mode: 'fast', items });
-  console.log(`\nQ: ${q}\ntype=${a.type} grade=${a.grade}`);
-  console.log('lead:', a.lead);
-  console.log('intro:', (a.intro || '').slice(0, 90));
-  for (const s of a.sections || []) console.log(` [${s.title}]`, (s.kind === 'steps' ? s.items.slice(0, 3).join(' | ') : s.kind === 'numbers' ? s.items.map((n) => n.v).join(',') : s.text).slice(0, 150));
-  console.log(' related:', (a.related || []).map((r) => r.ch + '.' + r.num).join(' '));
+console.log('\n===== 用户实际看到的答案 =====');
+for (const [q, expected] of [
+  ['被公司辞退了该拿多少钱', '19.4'],
+  ['房东押金不退怎么办', '15.1'],
+  ['被裁员后社保怎么办', '7.18'],
+  ['怀孕了要做哪些检查', '27.2'],
+  ['孩子发烧怎么办', '34.2'],
+  ['借钱不还怎么办', '8.19'],
+]) {
+  const answer = answerQuestion(q);
+  const refs = answer.found
+    ? (answer.kind === 'guide' ? answer.points.map(({ item }) => item) : [answer.item])
+      .map(({ ch, num }) => `${ch}.${num}`)
+    : [];
+  const match = refs.includes(expected);
+  if (!match) process.exitCode = 1;
+  console.log(`${match ? 'OK  ' : 'MISS'} ${q} -> ${refs.join(', ') || '无匹配'} (期望 ${expected})`);
 }

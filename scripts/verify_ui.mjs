@@ -24,6 +24,14 @@ await sleep(1500);
 
 const shot = async (n) => {
   await sleep(450);
+  if (process.argv.includes('--full')) {
+    const full = await page.evaluate(() => {
+      const t = document.querySelector('#thread');
+      return { h: t ? t.scrollHeight : 0 };
+    });
+    await page.setViewport({ width: 390, height: Math.max(844, full.h + 120), deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await sleep(300);
+  }
   await page.screenshot({ path: path.join(OUT, `${tag}-${n}.png`) });
 };
 

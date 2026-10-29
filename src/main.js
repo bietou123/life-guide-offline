@@ -4,7 +4,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { createIcons, Menu, SquarePen, ArrowLeft, ArrowUp, BookOpen, Search, History, Shuffle, Trash2, Copy, ChevronRight, ArrowUpRight } from 'lucide';
 import { loadData, getItems, search } from './search.js';
-import { answerQuestion } from './answer.js';
+import { answerQuestion, isFollowUp } from './answer.js';
 import { renderMarkdown } from './markdown.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -133,13 +133,17 @@ function closeDrawer() {
 
 function openCatalog() {
   closeDrawer();
+  searchOpen = false;
   $('#reader-search-input').value = '';
   navigate({ screen: 'reader', chapter: null });
 }
 
 function openEntry(item) {
   closeDrawer();
-  if (route.screen === 'reader' && route.chapter === item.ch) {
+  const alreadyReading = route.screen === 'reader' && route.chapter === item.ch && !searchOpen;
+  searchOpen = false;
+  $('#reader-search-input').value = '';
+  if (alreadyReading) {
     scrollToEntry(item.num);
   } else {
     navigate({ screen: 'reader', chapter: item.ch, entry: item.num });
@@ -171,41 +175,102 @@ function appendTurn(q, answer, answerMode) {
   avatar.setAttribute('aria-hidden', 'true');
   const body = el('div', 'ai-body');
   const meta = el('div', 'ai-meta');
-  meta.append(el('span', 'who', '指南'), el('span', 'dot'), el('span', '', answerMode === 'deep' ? '基于原文的整理' : '原文检索'));
+  const metaText = answer.kind === 'guide'
+    ? `${answer.points.length} 条原文 · ${answerMode === 'deep' ? '分析' : '要点'}`
+    : answerMode === 'deep' ? '基于原文的整理' : '原文检索';
+  meta.append(el('span', 'who', '指南'), el('span', 'dot'), el('span', '', metaText));
   body.append(meta);
 
   if (!answer.found) {
     body.append(el('p', 'ans-lead', answer.lead), el('p', 'ans-p', answer.detail));
     body.append(button('act-btn', '浏览全部目录', 'book-open', openCatalog));
+  } else if (answer.kind === 'guide') {
+    body.append(el('h2', 'ans-lead', answer.lead));
+    const points = el('div', 'guide-points');
+    for (const [index, point] of answer.points.entries()) {
+      const block = el('section', 'guide-point');
+      const heading = el('div', 'guide-heading');
+      heading.append(el('span', 'guide-index', String(index + 1).padStart(2, '0')));
+      const title = el('h3', 'guide-title', point.item.t);
+      heading.append(title);
+      block.append(heading, el('p', 'guide-summary', point.summary));
+      if (answerMode === 'deep') {
+        if (point.cost) addSection(block, '投入', point.cost);
+        if (point.caution) addSection(block, '边界', point.caution);
+      }
+      const foot = el('div', 'guide-foot');
+      if (point.item.grade) foot.append(el('span', `grade ${point.item.grade.toLowerCase()}`, `证据 ${point.item.grade}`));
+      foot.append(button('ref-link', `${point.item.ch}.${point.item.num} 原文`, 'arrow-up-right', () => openEntry(point.item)));
+      block.append(foot);
+      if (answerMode === 'deep') block.append(createSourceDetails(point.item));
+      points.append(block);
+    }
+    body.append(points);
+    if (answer.askNext) body.append(el('p', 'guide-next', answer.askNext));
+    const actions = el('div', 'ans-actions');
+    actions.append(button('act-btn', '复制摘要', 'copy', async () => {
+      try {
+        await navigator.clipboard.writeText(`${answer.lead}\n${answer.points.map((p) => `${p.item.ch}.${p.item.num} ${p.item.t}\n${p.summary}`).join('\n\n')}\n原文：${SOURCE}`);
+        toast('已复制');
+      } catch { toast('复制失败，请检查剪贴板权限'); }
+    }));
+    body.append(actions);
   } else {
     const item = answer.item;
-    body.append(el('h2', 'ans-lead', answer.action), el('p', 'ans-p', answer.lead));
+    body.append(el('h2', 'ans-lead', answer.action));
+    if (answer.point) body.append(el('p', 'ans-point', answer.point));
+    if (answer.lead) body.append(el('p', 'ans-p', answer.lead));
+
+    if (answer.steps && answer.steps.length >= 2) {
+      const sec = el('div', 'ans-sec');
+      sec.append(el('div', 'ans-sec-h', '可以这么做'));
+      const list = el('ol', 'steps');
+      answer.steps.forEach((text, i) => {
+        const li = el('li', '', text);
+        li.dataset.n = String(i + 1);
+        list.append(li);
+      });
+      sec.append(list);
+      body.append(sec);
+    }
+
+    if (answer.numbers && answer.numbers.length) {
+      const sec = el('div', 'ans-sec');
+      sec.append(el('div', 'ans-sec-h', '关键数字'));
+      const chips = answer.numbers.filter((num) => !num.ctx);
+      const rows = answer.numbers.filter((num) => num.ctx);
+      if (chips.length) {
+        const strip = el('div', 'num-chips');
+        for (const num of chips) strip.append(el('span', 'num-chip', num.v));
+        sec.append(strip);
+      }
+      if (rows.length) {
+        const wrap = el('div', 'nums');
+        for (const num of rows) {
+          const row = el('div', 'num');
+          row.append(el('span', 'num-k', num.v), el('span', 'num-v', num.ctx));
+          wrap.append(row);
+        }
+        sec.append(wrap);
+      }
+      body.append(sec);
+    }
+
+    if (answer.benefit) {
+      const sec = el('div', 'ans-sec');
+      sec.append(el('div', 'ans-sec-h', '原文依据'));
+      sec.append(el('blockquote', 'quote', answer.benefit));
+      body.append(sec);
+    }
+
     if (answerMode === 'deep') {
-      addSection(body, '成本', answer.cost);
-      addSection(body, '收益依据', answer.benefit);
+      addSection(body, '要付出什么', answer.cost);
       addSection(body, '注意与边界', answer.caution);
-    } else if (answer.cost) {
-      addSection(body, '投入', answer.cost);
     }
 
     const gradeRow = el('div', 'grade-row');
     if (item.grade) gradeRow.append(el('span', `grade ${item.grade.toLowerCase()}`, `原文证据等级 ${item.grade}`));
-    const details = el('details', 'source-details');
-    details.append(el('summary', 'src-toggle', '查看原始出处与备注'));
-    const content = el('div', 'src-body');
-    if (item.src) content.append(el('p', '', item.src));
-    if (item.note) content.append(el('p', '', `原文备注：${item.note}`));
-    const links = [...new Set((item.src || '').match(/https?:\/\/[^\s<>]+/g) || [])];
-    for (const raw of links) {
-      const url = raw.replace(/[，。；,;]+$/, '');
-      const a = el('a', 'src-link', url);
-      a.href = url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      content.append(a);
-    }
-    details.append(content);
-    gradeRow.append(details);
+    gradeRow.append(createSourceDetails(item));
     body.append(gradeRow);
 
     if (answer.related.length) {
@@ -240,6 +305,24 @@ function appendTurn(q, answer, answerMode) {
   icons();
 }
 
+function createSourceDetails(item) {
+  const details = el('details', 'source-details');
+  details.append(el('summary', 'src-toggle', '原始出处与备注'));
+  const content = el('div', 'src-body');
+  if (item.src) content.append(el('p', '', item.src));
+  if (item.note) content.append(el('p', '', `原文备注：${item.note}`));
+  for (const raw of new Set((item.src || '').match(/https?:\/\/[^\s<>]+/g) || [])) {
+    const url = raw.replace(/[，。；,;]+$/, '');
+    const a = el('a', 'src-link', url);
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    content.append(a);
+  }
+  details.append(content);
+  return details;
+}
+
 function addSection(parent, label, value) {
   if (!value) return;
   const section = el('div', 'ans-sec');
@@ -257,7 +340,8 @@ function renderThread() {
   $('#welcome').hidden = !!conversation?.turns.length;
   if (conversation) {
     conversation.turns.forEach((turn, idx) => {
-      const previous = conversation.turns[idx - 1]?.q || '';
+      const previous = isFollowUp(turn.q)
+        ? turn.context || conversation.turns.slice(0, idx).reverse().find((old) => !isFollowUp(old.q))?.q || '' : '';
       appendTurn(turn.q, answerQuestion(turn.q, turn.mode, previous), turn.mode);
     });
   }
@@ -274,12 +358,15 @@ function sendQuestion(value) {
     conversations.unshift(conversation);
     activeId = conversation.id;
   }
-  const previous = conversation.turns.at(-1)?.q || '';
-  conversation.turns.push({ q, mode });
+  const context = isFollowUp(q)
+    ? [...conversation.turns].reverse().find((turn) => !isFollowUp(turn.q))?.q || conversation.turns[0]?.context || ''
+    : '';
+  const answer = answerQuestion(q, mode, context);
+  conversation.turns.push({ q, mode, context });
   conversation.turns = conversation.turns.slice(-60);
   conversations = [conversation, ...conversations.filter((c) => c.id !== conversation.id)].slice(0, 20);
   $('#welcome').hidden = true;
-  appendTurn(q, answerQuestion(q, mode, previous), mode);
+  appendTurn(q, answer, mode);
   $('#input').value = '';
   updateComposer();
   $('#input').blur();
@@ -303,8 +390,11 @@ function renderHistoryList() {
   list.replaceChildren();
   if (!conversations.length) list.append(el('p', 'history-empty', '还没有对话记录'));
   for (const conversation of conversations) {
+    const row = el('div', 'history-row');
     const entry = el('button', `history-entry${activeId === conversation.id ? ' selected' : ''}`, conversation.title);
     entry.type = 'button';
+    entry.title = conversation.title;
+    if (activeId === conversation.id) entry.setAttribute('aria-current', 'page');
     entry.addEventListener('click', () => {
       activeId = conversation.id;
       saveConversations();
@@ -312,8 +402,25 @@ function renderHistoryList() {
       if (route.screen !== 'chat') navigate({ screen: 'chat' });
       renderThread();
     });
-    list.append(entry);
+    const remove = el('button', 'history-delete');
+    remove.type = 'button';
+    remove.setAttribute('aria-label', `删除对话：${conversation.title}`);
+    remove.title = '删除这段对话';
+    remove.append(icon('trash-2'));
+    remove.addEventListener('click', () => {
+      if (!confirm(`删除「${conversation.title}」？`)) return;
+      conversations = conversations.filter((saved) => saved.id !== conversation.id);
+      if (activeId === conversation.id) {
+        activeId = conversations[0]?.id || null;
+        renderThread();
+      }
+      saveConversations();
+      renderHistoryList();
+    });
+    row.append(entry, remove);
+    list.append(row);
   }
+  icons();
 }
 
 function renderCatalog() {
@@ -480,6 +587,12 @@ function wireEvents() {
       other.classList.toggle('is-on', other === chip);
       other.setAttribute('aria-pressed', String(other === chip));
     });
+    const last = currentConversation()?.turns.at(-1);
+    if (last && last.mode !== mode) {
+      last.mode = mode;
+      saveConversations();
+      renderThread();
+    }
   }));
   window.addEventListener('popstate', (event) => {
     route = event.state?.guide ? event.state : { screen: 'chat' };
@@ -507,6 +620,11 @@ async function boot() {
     items = getItems();
     if (!book.length || !items.length) throw new Error('Empty guide data');
     readConversations();
+    mode = currentConversation()?.turns.at(-1)?.mode || 'fast';
+    document.querySelectorAll('.mode-chip').forEach((chip) => {
+      chip.classList.toggle('is-on', chip.dataset.mode === mode);
+      chip.setAttribute('aria-pressed', String(chip.dataset.mode === mode));
+    });
     history.replaceState({ guide: true, screen: 'chat' }, '', location.pathname + location.search + '#chat');
     renderSuggestions();
     wireEvents();

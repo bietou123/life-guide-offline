@@ -30,13 +30,14 @@ try {
     assert.equal(await page.$eval('#welcome', (node) => node.hidden), false);
     assert.equal(remoteRequests.length, 0, `Offline start requested: ${remoteRequests}`);
 
+    await page.click('[data-mode="deep"]');
     await page.type('#input', '被裁员了，赔偿该怎么算？');
     await page.click('#btn-send');
     await page.waitForSelector('.msg.ai .ans-lead');
     assert.match(await page.$eval('.msg.ai .ans-lead', (node) => node.textContent), /被裁|补偿|辞退/);
     await page.click('.source-details summary');
     assert.ok(await page.$('.source-details[open] .src-link[href^="http"]'), 'Original citation link is missing');
-    await page.click('.msg.ai .ans-actions .act-btn');
+    await page.click('.guide-point .ref-link');
     await page.waitForSelector('#screen-reader.is-active .entry-heading');
     const position = await page.evaluate(() => {
       const body = document.querySelector('#reader-body').getBoundingClientRect();
@@ -57,7 +58,7 @@ try {
     await page.click('#btn-menu');
     await page.click('#btn-open-history');
     assert.ok((await page.$$('.history-entry')).length >= 2, 'Conversation history was not saved');
-    await page.click('.history-entry:last-child');
+    await page.click('.history-row:last-child .history-entry');
     assert.match(await page.$eval('.msg.user .bubble-user', (node) => node.textContent), /被裁员/);
     await page.reload({ waitUntil: 'networkidle0' });
     await page.waitForSelector('.msg.user .bubble-user');
