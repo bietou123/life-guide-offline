@@ -1,0 +1,1 @@
+Fully offline lookup for 767 life-advice entries, with sources

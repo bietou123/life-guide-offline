@@ -1,0 +1,20 @@
+A High-Value Guide to Life — 34 chapters and 767 entries — lives entirely on your phone. Ask a question and it finds the passage, with no network required.
+
+Ask the way you would ask a person: “I got laid off, how much compensation should I get?” or “My landlord won't return my deposit”. The app searches the text locally and answers with the most relevant entry, then lays out what you can do, the key numbers, the passage it came from, what it costs you, and where it stops applying. Broader questions cite several entries at once and point to related entries in the same chapter.
+
+“Analyze” groups what the text says about cost, payoff and the limits of the advice; “Look up” keeps the answer close to the original wording. Both stream out word by word, and reopening a saved conversation shows the full text without replaying the animation.
+
+What's inside
+· Answers stream in like a conversation
+· Every answer links back to the full passage
+· Browse all 34 chapters, with full-text search
+· “Surprise me” draws one random entry after a little shuffle
+· Follows the system light/dark theme; switch between 中文 and English in the menu
+· English questions are mapped to the matching Chinese query first — the source text is Chinese, so quotations stay in Chinese
+· Conversations stay on the device and can be deleted one by one or cleared at once
+
+On reliability
+Local BM25 retrieval plus rule-based assembly. No language model, no network lookup to check whether advice is still current. When the text has nothing relevant, the app says so instead of inventing an answer. For medical, legal or emergency matters, follow local professional and official guidance.
+
+On the source
+The original is “A High-Value Guide to Life” by eternity4719, published under CC BY 4.0. This app is an offline adaptation and is not endorsed by the author. It collects no personal information, needs no account, and contains no ads or analytics.

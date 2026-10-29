@@ -13,6 +13,8 @@
 
 这是基于本地 BM25 检索和规则整理的参考工具，**不调用语言模型，也不联网验证信息的新旧**；当原文没有匹配内容时会拒绝编造。医疗、法律和紧急情况请以当时当地的专业意见及官方规定为准。
 
+应用不收集任何个人信息，对话只保存在本机。隐私政策：[docs/privacy.html](docs/privacy.html)（在线版 <https://bietou123.github.io/life-guide-offline/privacy.html>）。
+
 ## 本地运行
 
 要求 Node.js 20+，安装依赖后启动 Vite：

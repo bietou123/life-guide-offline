@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私政策 · 人生指南 / Privacy Policy · Life Guide</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0 auto; padding: 40px 22px 80px; max-width: 720px;
+    font: 16px/1.75 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #17181c; background: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e6e7ea; background: #101114; }
+    a { color: #8ab4f8; }
+    th, td { border-color: #2c2f36; }
+    code { background: #1b1d22; }
+  }
+  h1 { font-size: 24px; line-height: 1.3; margin: 0 0 6px; }
+  h2 { font-size: 17px; margin: 36px 0 8px; }
+  h3 { font-size: 15px; margin: 22px 0 6px; }
+  .sub { color: #6b7280; font-size: 13.5px; margin: 0 0 8px; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  code { padding: 1px 5px; border-radius: 4px; background: #f1f2f5; font-size: 13.5px; }
+  hr { border: 0; border-top: 1px solid #d8dade; margin: 44px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #e3e5e9; vertical-align: top; }
+  .lang { font-size: 13px; color: #6b7280; }
+</style>
+</head>
+<body>
+<p class="lang"><a href="#zh">中文</a> · <a href="#en">English</a></p>
+
+<h1 id="zh">「人生指南」隐私政策</h1>
+<p class="sub">应用包名：<code>top.arrowwood.lifeguide</code> · 最后更新：2026-10-29</p>
+
+<p>「人生指南」是一款完全离线的 Android 应用，不需要账号，不联网获取答案。这份政策说明应用在本机保存了什么、不保存什么。</p>
+
+<h2>一、我们不收集任何个人信息</h2>
+<ul>
+  <li>没有登录、注册，也不要求你填写姓名、手机号、邮箱或任何身份信息。</li>
+  <li>没有统计分析、广告 SDK、崩溃上报或任何第三方追踪组件。</li>
+  <li>你的问题、提问记录、语言与主题偏好都不会离开这台设备。</li>
+</ul>
+
+<h2>二、保存在本机的数据</h2>
+<table>
+  <tr><th>内容</th><th>存放位置</th><th>用途</th></tr>
+  <tr><td>对话历史（问题与回答、回答模式）</td><td>应用本地存储 <code>localStorage</code></td><td>重新打开应用时恢复上次对话</td></tr>
+  <tr><td>界面语言偏好</td><td><code>localStorage</code>（<code>life-guide-lang-v1</code>）</td><td>记住「跟随系统 / 中文 / English」的选择</td></tr>
+</table>
+<p>这些数据只在本机，不会上传。删除方式：在菜单里「清空本地记录」可删除全部对话；卸载应用会清除本机保存的全部数据。</p>
+<p>应用声明了网络权限（<code>android.permission.INTERNET</code>），这是 Android 应用外壳的默认声明。应用本身的检索、分析与对话全部在本机计算，不向任何服务器发送请求；只有在你自己点击「原著」「原文」这类外部链接时，才会把该网址交给系统浏览器打开，之后是否联网由浏览器决定。</p>
+
+<h2>三、剪贴板</h2>
+<p>回答下方的「复制」只会把这段回答写入系统剪贴板，由你粘贴到别处。应用不读取剪贴板内容。</p>
+
+<h2>四、第三方</h2>
+<p>应用不集成广告、统计或社交登录。所引用的原文来自公开的 CC BY 4.0 作品，本地内置，不构成第三方数据交换。</p>
+
+<h2>五、儿童隐私</h2>
+<p>应用不收集任何人的个人信息，包括儿童。原文涉及的法律、医疗、财务内容面向成年读者。</p>
+
+<h2>六、政策变更</h2>
+<p>如本政策有更新，会修改本页顶部的日期，并在项目仓库中留下提交记录。</p>
+
+<h2>七、联系方式</h2>
+<p>问题或请求：<a href="https://github.com/bietou123/life-guide-offline/issues">github.com/bietou123/life-guide-offline/issues</a></p>
+
+<hr>
+
+<h1 id="en">Privacy Policy — Life Guide</h1>
+<p class="sub">Package name: <code>top.arrowwood.lifeguide</code> · Last updated: 2026-10-29</p>
+
+<p>Life Guide is a fully offline Android app. It has no account system and never fetches answers from the network. This page explains what the app keeps on your device and what it never keeps.</p>
+
+<h2>1. We do not collect personal information</h2>
+<ul>
+  <li>No sign-in, no registration, and no request for your name, phone number, email address or any identifier.</li>
+  <li>No analytics, advertising SDK, crash reporting or third-party trackers.</li>
+  <li>Your questions, conversation history and language preference never leave the device.</li>
+</ul>
+
+<h2>2. Data stored on this device</h2>
+<table>
+  <tr><th>Data</th><th>Where</th><th>Why</th></tr>
+  <tr><td>Conversation history (questions, answers, answer mode)</td><td>App <code>localStorage</code></td><td>Restore your last conversation when you reopen the app</td></tr>
+  <tr><td>Interface language preference</td><td><code>localStorage</code> (<code>life-guide-lang-v1</code>)</td><td>Remember “System / 中文 / English”</td></tr>
+</table>
+<p>This data stays on the device and is never uploaded. To delete it, use “Clear local data” in the menu, or uninstall the app.</p>
+<p>The app declares <code>android.permission.INTERNET</code>, which the Android app shell declares by default. All retrieval, analysis and answering happen on the device and send no requests to any server. The only time a URL leaves the app is when you tap an external link such as the original work or the license; that opens your system browser and whatever happens there is up to the browser.</p>
+
+<h2>3. Clipboard</h2>
+<p>The “Copy” action only writes that answer to the system clipboard. The app never reads clipboard contents.</p>
+
+<h2>4. Third parties</h2>
+<p>No ads, no analytics, no social login. The quoted source text is a public CC BY 4.0 work bundled locally, so no data exchange with third parties takes place.</p>
+
+<h2>5. Children</h2>
+<p>The app collects no personal information from anyone, including children. Its legal, medical and financial content is written for adult readers.</p>
+
+<h2>6. Changes</h2>
+<p>If this policy changes, the date at the top of this page is updated and the change is recorded in the project repository.</p>
+
+<h2>7. Contact</h2>
+<p><a href="https://github.com/bietou123/life-guide-offline/issues">github.com/bietou123/life-guide-offline/issues</a></p>
+</body>
+</html>

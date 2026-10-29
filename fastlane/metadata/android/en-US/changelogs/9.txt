@@ -1,0 +1,5 @@
+v1.1.0
+· Added a 中文 / English interface switch, defaulting to the system language
+· English questions are mapped to the matching Chinese query before retrieval
+· English answers use English scaffolding and buttons; quotations stay in the original Chinese
+· Built against Android 15 / 16 (targetSdk 36)
