@@ -34,6 +34,10 @@ try {
     await page.type('#input', '被裁员了，赔偿该怎么算？');
     await page.click('#btn-send');
     await page.waitForSelector('.msg.ai .ans-lead');
+    await page.waitForFunction(() => {
+      const body = document.querySelector('.msg.ai .ai-body');
+      return body && !body.hasAttribute('data-streaming') && !body.querySelector('.stream-wait, .stream-typing');
+    });
     assert.match(await page.$eval('.msg.ai .ans-lead', (node) => node.textContent), /被裁|补偿|辞退/);
     await page.click('.source-details summary');
     assert.ok(await page.$('.source-details[open] .src-link[href^="http"]'), 'Original citation link is missing');

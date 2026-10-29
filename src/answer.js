@@ -183,6 +183,16 @@ export function isFollowUp(question) {
 export function answerQuestion(question, mode = 'fast', previousQuestion = '') {
   const followUp = previousQuestion && isFollowUp(question);
   const query = followUp ? `${previousQuestion} ${question}` : question;
+  if (/幼儿园|入园|幼小衔接/.test(query)
+    && /报名|材料|手续|体检|准备|幼小衔接/.test(query)
+    && !/屏幕|看电视|户外|近视|视力|牙齿|蛀牙|窝沟/.test(query)) {
+    return {
+      found: false,
+      lead: '这本指南没有覆盖幼儿园入园或幼小衔接的具体要求。',
+      detail: '报名材料、体检和接种证明等请以当地教育部门及幼儿园通知为准。',
+      related: [],
+    };
+  }
   const guided = findGuide(query, getItems());
   if (guided) {
     const { guide, refs } = guided;

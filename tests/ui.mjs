@@ -5,6 +5,10 @@ import puppeteer from 'puppeteer-core';
 
 const url = process.argv[2] || 'http://127.0.0.1:5201/';
 const settle = () => new Promise((resolve) => setTimeout(resolve, 550));
+const waitForAnswer = (page) => page.waitForFunction(() => {
+  const body = [...document.querySelectorAll('.msg.ai .ai-body')].at(-1);
+  return body && !body.hasAttribute('data-streaming') && !body.querySelector('.stream-wait, .stream-typing');
+});
 const chrome = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const out = new URL('../validation/', import.meta.url);
 await mkdir(out, { recursive: true });
@@ -41,6 +45,7 @@ try {
 
   await page.click('.suggest-card:nth-child(2)');
   await page.waitForSelector('.msg.ai .ans-lead');
+  await waitForAnswer(page);
   await settle();
   assert.match(await page.$eval('.msg.ai .ans-lead', (node) => node.textContent), /押金/);
   await page.screenshot({ path: fileURLToPath(new URL('mobile-answer.png', out)) });
@@ -56,6 +61,7 @@ try {
   await page.click('[data-mode="deep"]');
   await page.type('#input', '借条怎么写才有法律效力');
   await page.click('#btn-send');
+  await waitForAnswer(page);
   assert.match(await page.$eval('.msg.ai:last-child', (node) => node.textContent), /原文依据/);
 
   await page.click('#btn-attach');
@@ -85,6 +91,7 @@ try {
   await page.click('#btn-new');
   await page.type('#input', '怀孕了做哪些检查');
   await page.click('#btn-send');
+  await waitForAnswer(page);
   assert.equal(await page.$$eval('.guide-point', (nodes) => nodes.length), 3);
   assert.match(await page.$eval('.guide-point .ref-link', (node) => node.textContent), /27\.2/);
   assert.equal(await page.$$eval('.guide-point .ans-sec', (nodes) => nodes.length), 0);

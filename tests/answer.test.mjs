@@ -103,6 +103,12 @@ test('common care and dispute questions do not point to a different situation', 
   assert.equal(answerQuestion('借条怎么写才有效').item?.num, 18);
 });
 
+test('kindergarten paperwork is not answered with unrelated child health entries', () => {
+  assert.equal(answerQuestion('幼儿园报名要准备什么材料').found, false);
+  assert.equal(answerQuestion('幼小衔接怎么准备').found, false);
+  assert.equal(answerQuestion('幼儿园孩子户外活动怎么安排').guideId, 'kindergarten-start');
+});
+
 test('key numbers leave out citation dates and incidental counts', () => {
   assert.deepEqual(answerQuestion('被诈骗了怎么办').numbers, []);
   assert.deepEqual(answerQuestion('房东押金不退怎么办').numbers, []);
