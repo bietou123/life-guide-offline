@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#000000" />
-<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+<meta name="color-scheme" content="light dark" />
 <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 <title>指南</title>
 </head>
@@ -38,6 +39,14 @@
         </div>
         <h1 class="welcome-title">有什么想弄明白的？</h1>
         <p class="welcome-sub">从《高性价比人生指南》767 条建议里找答案<br/>离线可用 · 可回到每条原文</p>
+        <button class="lucky-btn" id="btn-lucky" type="button">
+          <span class="lucky-icon"><i data-lucide="shuffle"></i></span>
+          <span class="lucky-copy">
+            <span class="lucky-text">随便来一条</span>
+            <span class="lucky-sub">从 767 条建议里随机抽一条</span>
+          </span>
+          <span class="lucky-go"><i data-lucide="chevron-right"></i></span>
+        </button>
         <div class="suggest-grid" id="suggest-grid"></div>
       </div>
       <div id="messages"></div>
@@ -49,6 +58,9 @@
           <button class="mode-chip is-on" data-mode="fast" aria-pressed="true">检索</button>
           <button class="mode-chip" data-mode="deep" aria-pressed="false">分析</button>
         </div>
+        <button class="lucky-chip" id="btn-lucky-row" type="button" aria-label="随便来一条">
+          <i data-lucide="shuffle"></i><span>随便一条</span>
+        </button>
         <span class="mode-hint">完全离线</span>
       </div>
       <div class="composer" id="composer">
@@ -113,7 +125,7 @@
     </nav>
     <div class="drawer-foot">
       <p>原著 <a id="source-link" href="https://github.com/eternity4719/HowToLiveBetter">eternity4719 / HowToLiveBetter</a><br/>原文 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · 本应用为改编 · 全部计算在本机完成</p>
-      <p class="ver">v1.0.6</p>
+      <p class="ver">v1.0.7</p>
     </div>
   </aside>
 </div>

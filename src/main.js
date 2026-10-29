@@ -165,6 +165,32 @@ function scrollThread() {
   thread.scrollTop = currentConversation()?.turns.length ? thread.scrollHeight : 0;
 }
 
+function randomItem() {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+// 抽签时标题先滚动几轮，再真正作答，按下去有反馈
+let shuffling = false;
+function shuffleEntry() {
+  if (shuffling || !items.length) return;
+  if (reducedMotion()) { sendQuestion(randomItem().t); return; }
+  shuffling = true;
+  const buttons = [$('#btn-lucky'), $('#btn-lucky-row')].filter(Boolean);
+  const label = $('.lucky-text');
+  buttons.forEach((node) => node.classList.add('is-shuffling'));
+  let ticks = 0;
+  const timer = setInterval(() => {
+    const item = randomItem();
+    if (label) label.textContent = item.t.length > 18 ? `${item.t.slice(0, 18)}…` : item.t;
+    if (++ticks < 7) return;
+    clearInterval(timer);
+    buttons.forEach((node) => node.classList.remove('is-shuffling'));
+    if (label) label.textContent = '随便来一条';
+    shuffling = false;
+    sendQuestion(randomItem().t);
+  }, 85);
+}
+
 let streamToken = 0;
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -657,9 +683,10 @@ function wireEvents() {
   });
   $('#btn-random').addEventListener('click', () => {
     closeDrawer();
-    const item = items[Math.floor(Math.random() * items.length)];
-    sendQuestion(item.t);
+    sendQuestion(randomItem().t);
   });
+  $('#btn-lucky').addEventListener('click', shuffleEntry);
+  $('#btn-lucky-row').addEventListener('click', shuffleEntry);
   $('#btn-clear').addEventListener('click', () => {
     if (!confirm('清空本机保存的所有对话？原文不会被删除。')) return;
     conversations = [];
