@@ -107,6 +107,8 @@ function extractNumbers(item) {
     if (CN_NOISE.test(m[0])) continue;
     if (CN_YEAR.test(m[0].replace(/\s+/g, ''))) continue;
     if (/档$/.test(m[0])) continue;
+    // 「第二天」「第一次」是序数，不是时长和次数
+    if (txt[m.index - 1] === '第') continue;
     hits.push({ at: m.index, v: m[0] });
   }
 
