@@ -26,7 +26,11 @@ await sleep(1500);
 await page.click('#input');
 await page.type('#input', question, { delay: 8 });
 await page.keyboard.press('Enter');
-await sleep(1600);
+await page.waitForFunction(() => {
+  const body = document.querySelector('.msg.ai:last-of-type .ai-body');
+  return !!body && !body.dataset.streaming && !body.querySelector('.typing');
+}, { timeout: 20000, polling: 100 });
+await sleep(400);
 
 const summary = await page.evaluate(() => {
   const body = document.querySelector('.msg.ai:last-of-type .ai-body') || document.querySelector('.msg.ai .ai-body');

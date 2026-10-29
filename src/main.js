@@ -165,7 +165,87 @@ function scrollThread() {
   thread.scrollTop = currentConversation()?.turns.length ? thread.scrollHeight : 0;
 }
 
-function appendTurn(q, answer, answerMode) {
+let streamToken = 0;
+const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// 每段文字先藏起来，按队列逐段打字或淡入
+function createStream(body, animate) {
+  const steps = [];
+  const on = !!animate && !reducedMotion();
+  const add = (node, mode = 'type') => {
+    if (!on) return node;
+    node.classList.add('stream-wait');
+    if (mode === 'type') {
+      const text = node.textContent;
+      node.textContent = '';
+      steps.push({ node, text });
+    } else {
+      steps.push({ node });
+    }
+    return node;
+  };
+  return { body, steps, on, add };
+}
+
+function followScroll() {
+  const thread = $('#thread');
+  if (thread.scrollHeight - thread.scrollTop - thread.clientHeight < 220) thread.scrollTop = thread.scrollHeight;
+}
+
+function typeInto(node, text, token, size) {
+  return new Promise((resolve) => {
+    node.classList.remove('stream-wait');
+    node.classList.add('stream-typing');
+    const total = text.length;
+    let shown = 0;
+    const finish = () => {
+      node.textContent = text;
+      node.classList.remove('stream-typing');
+      resolve();
+    };
+    const tick = () => {
+      if (token !== streamToken) return finish();
+      shown = Math.min(total, shown + size);
+      node.textContent = text.slice(0, shown);
+      followScroll();
+      if (shown < total) setTimeout(tick, 15);
+      else finish();
+    };
+    setTimeout(tick, 15);
+  });
+}
+
+function flushStream(stream) {
+  for (const step of stream.steps) {
+    step.node.classList.remove('stream-wait', 'stream-typing');
+    if (step.text !== undefined) step.node.textContent = step.text;
+  }
+  delete stream.body.dataset.streaming;
+}
+
+async function runStream(stream) {
+  if (!stream.on) return;
+  const token = ++streamToken;
+  stream.body.dataset.streaming = '1';
+  // 整段答案控制在两秒左右，长答案自动加快，不让用户干等
+  const totalChars = stream.steps.reduce((sum, step) => sum + (step.text ? step.text.length : 0), 0);
+  const budget = Math.min(2400, 600 + totalChars * 3);
+  const size = Math.max(2, Math.ceil(totalChars / Math.max(1, Math.floor(budget / 15))));
+  for (const step of stream.steps) {
+    if (token !== streamToken) return flushStream(stream);
+    if (step.text === undefined) {
+      step.node.classList.remove('stream-wait');
+      step.node.classList.add('stream-in');
+      await new Promise((resolve) => setTimeout(resolve, 24));
+    } else {
+      await typeInto(step.node, step.text, token, size);
+      await new Promise((resolve) => setTimeout(resolve, 14));
+    }
+  }
+  delete stream.body.dataset.streaming;
+}
+
+function appendTurn(q, answer, answerMode, animate = false) {
   const user = el('div', 'msg user');
   user.append(el('div', 'bubble-user', q));
   $('#messages').append(user);
@@ -174,6 +254,7 @@ function appendTurn(q, answer, answerMode) {
   const avatar = el('div', 'ai-avatar', '✦');
   avatar.setAttribute('aria-hidden', 'true');
   const body = el('div', 'ai-body');
+  const stream = createStream(body, animate);
   const meta = el('div', 'ai-meta');
   const metaText = answer.kind === 'guide'
     ? `${answer.points.length} 条原文 · ${answerMode === 'deep' ? '分析' : '要点'}`
@@ -181,32 +262,38 @@ function appendTurn(q, answer, answerMode) {
   meta.append(el('span', 'who', '指南'), el('span', 'dot'), el('span', '', metaText));
   body.append(meta);
 
+  let thinking = null;
+  if (stream.on) {
+    thinking = el('div', 'typing');
+    thinking.append(el('i'), el('i'), el('i'));
+    body.append(thinking);
+  }
+
   if (!answer.found) {
-    body.append(el('p', 'ans-lead', answer.lead), el('p', 'ans-p', answer.detail));
-    body.append(button('act-btn', '浏览全部目录', 'book-open', openCatalog));
+    body.append(stream.add(el('p', 'ans-lead', answer.lead)), stream.add(el('p', 'ans-p', answer.detail)));
+    body.append(stream.add(button('act-btn', '浏览全部目录', 'book-open', openCatalog), 'reveal'));
   } else if (answer.kind === 'guide') {
-    body.append(el('h2', 'ans-lead', answer.lead));
+    body.append(stream.add(el('h2', 'ans-lead', answer.lead)));
     const points = el('div', 'guide-points');
     for (const [index, point] of answer.points.entries()) {
-      const block = el('section', 'guide-point');
+      const block = stream.add(el('section', 'guide-point'), 'reveal');
       const heading = el('div', 'guide-heading');
       heading.append(el('span', 'guide-index', String(index + 1).padStart(2, '0')));
-      const title = el('h3', 'guide-title', point.item.t);
-      heading.append(title);
-      block.append(heading, el('p', 'guide-summary', point.summary));
+      heading.append(stream.add(el('h3', 'guide-title', point.item.t)));
+      block.append(heading, stream.add(el('p', 'guide-summary', point.summary)));
       if (answerMode === 'deep') {
-        if (point.cost) addSection(block, '投入', point.cost);
-        if (point.caution) addSection(block, '边界', point.caution);
+        if (point.cost) addSection(block, '投入', point.cost, stream);
+        if (point.caution) addSection(block, '边界', point.caution, stream);
       }
       const foot = el('div', 'guide-foot');
       if (point.item.grade) foot.append(el('span', `grade ${point.item.grade.toLowerCase()}`, `证据 ${point.item.grade}`));
       foot.append(button('ref-link', `${point.item.ch}.${point.item.num} 原文`, 'arrow-up-right', () => openEntry(point.item)));
-      block.append(foot);
-      if (answerMode === 'deep') block.append(createSourceDetails(point.item));
+      block.append(stream.add(foot, 'reveal'));
+      if (answerMode === 'deep') block.append(stream.add(createSourceDetails(point.item), 'reveal'));
       points.append(block);
     }
     body.append(points);
-    if (answer.askNext) body.append(el('p', 'guide-next', answer.askNext));
+    if (answer.askNext) body.append(stream.add(el('p', 'guide-next', answer.askNext)));
     const actions = el('div', 'ans-actions');
     actions.append(button('act-btn', '复制摘要', 'copy', async () => {
       try {
@@ -214,19 +301,19 @@ function appendTurn(q, answer, answerMode) {
         toast('已复制');
       } catch { toast('复制失败，请检查剪贴板权限'); }
     }));
-    body.append(actions);
+    body.append(stream.add(actions, 'reveal'));
   } else {
     const item = answer.item;
-    body.append(el('h2', 'ans-lead', answer.action));
-    if (answer.point) body.append(el('p', 'ans-point', answer.point));
-    if (answer.lead) body.append(el('p', 'ans-p', answer.lead));
+    body.append(stream.add(el('h2', 'ans-lead', answer.action)));
+    if (answer.point) body.append(stream.add(el('p', 'ans-point', answer.point)));
+    if (answer.lead) body.append(stream.add(el('p', 'ans-p', answer.lead)));
 
     if (answer.steps && answer.steps.length >= 2) {
       const sec = el('div', 'ans-sec');
-      sec.append(el('div', 'ans-sec-h', '可以这么做'));
+      sec.append(stream.add(el('div', 'ans-sec-h', '可以这么做')));
       const list = el('ol', 'steps');
       answer.steps.forEach((text, i) => {
-        const li = el('li', '', text);
+        const li = stream.add(el('li', '', text));
         li.dataset.n = String(i + 1);
         list.append(li);
       });
@@ -236,12 +323,12 @@ function appendTurn(q, answer, answerMode) {
 
     if (answer.numbers && answer.numbers.length) {
       const sec = el('div', 'ans-sec');
-      sec.append(el('div', 'ans-sec-h', '关键数字'));
+      sec.append(stream.add(el('div', 'ans-sec-h', '关键数字')));
       const chips = answer.numbers.filter((num) => !num.ctx);
       const rows = answer.numbers.filter((num) => num.ctx);
       if (chips.length) {
         const strip = el('div', 'num-chips');
-        for (const num of chips) strip.append(el('span', 'num-chip', num.v));
+        for (const num of chips) strip.append(stream.add(el('span', 'num-chip', num.v), 'reveal'));
         sec.append(strip);
       }
       if (rows.length) {
@@ -249,7 +336,7 @@ function appendTurn(q, answer, answerMode) {
         for (const num of rows) {
           const row = el('div', 'num');
           row.append(el('span', 'num-k', num.v), el('span', 'num-v', num.ctx));
-          wrap.append(row);
+          wrap.append(stream.add(row, 'reveal'));
         }
         sec.append(wrap);
       }
@@ -258,24 +345,24 @@ function appendTurn(q, answer, answerMode) {
 
     if (answer.benefit) {
       const sec = el('div', 'ans-sec');
-      sec.append(el('div', 'ans-sec-h', '原文依据'));
-      sec.append(el('blockquote', 'quote', answer.benefit));
+      sec.append(stream.add(el('div', 'ans-sec-h', '原文依据')));
+      sec.append(stream.add(el('blockquote', 'quote', answer.benefit)));
       body.append(sec);
     }
 
     if (answerMode === 'deep') {
-      addSection(body, '要付出什么', answer.cost);
-      addSection(body, '注意与边界', answer.caution);
+      addSection(body, '要付出什么', answer.cost, stream);
+      addSection(body, '注意与边界', answer.caution, stream);
     }
 
     const gradeRow = el('div', 'grade-row');
     if (item.grade) gradeRow.append(el('span', `grade ${item.grade.toLowerCase()}`, `原文证据等级 ${item.grade}`));
     gradeRow.append(createSourceDetails(item));
-    body.append(gradeRow);
+    body.append(stream.add(gradeRow, 'reveal'));
 
     if (answer.related.length) {
       const related = el('div', 'rel');
-      related.append(el('div', 'ans-sec-h', '同章相关条目'));
+      related.append(stream.add(el('div', 'ans-sec-h', '同章相关条目')));
       for (const candidate of answer.related) {
         const link = el('button', 'rel-item');
         link.type = 'button';
@@ -284,7 +371,7 @@ function appendTurn(q, answer, answerMode) {
         title.append(el('small', 'rel-ch', `第 ${candidate.ch} 章 · ${candidate.chT}`));
         link.append(title);
         link.addEventListener('click', () => openEntry(candidate));
-        related.append(link);
+        related.append(stream.add(link, 'reveal'));
       }
       body.append(related);
     }
@@ -297,12 +384,19 @@ function appendTurn(q, answer, answerMode) {
         toast('已复制');
       } catch { toast('复制失败，请检查剪贴板权限'); }
     }));
-    body.append(actions);
+    body.append(stream.add(actions, 'reveal'));
   }
 
   msg.append(avatar, body);
   $('#messages').append(msg);
   icons();
+  if (stream.on) {
+    setTimeout(() => {
+      thinking?.remove();
+      runStream(stream);
+    }, 240);
+  }
+  return stream;
 }
 
 function createSourceDetails(item) {
@@ -323,11 +417,17 @@ function createSourceDetails(item) {
   return details;
 }
 
-function addSection(parent, label, value) {
+function addSection(parent, label, value, stream) {
   if (!value) return;
   const section = el('div', 'ans-sec');
-  section.append(el('div', 'ans-sec-h', label), el('p', 'ans-p', value));
+  const head = el('div', 'ans-sec-h', label);
+  const text = el('p', 'ans-p', value);
+  section.append(head, text);
   parent.append(section);
+  if (stream) {
+    stream.add(head);
+    stream.add(text);
+  }
 }
 
 function sourceUrl(item) {
@@ -366,7 +466,7 @@ function sendQuestion(value) {
   conversation.turns = conversation.turns.slice(-60);
   conversations = [conversation, ...conversations.filter((c) => c.id !== conversation.id)].slice(0, 20);
   $('#welcome').hidden = true;
-  appendTurn(q, answer, mode);
+  appendTurn(q, answer, mode, true);
   $('#input').value = '';
   updateComposer();
   $('#input').blur();
