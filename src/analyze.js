@@ -1,11 +1,12 @@
 // 答案生成：意图识别 + 原文抽取 + 结构化组织（全部本地规则，无模型调用）
+import { t } from './i18n.js';
 
 const SMALLTALK = [
-  { re: /^(你好|嗨|hi|hello|在吗|在不在)[!！。.~～\s]*$/i, reply: '在。想了解什么？可以直接问，比如「被辞退了该拿多少钱」「租房押金不退怎么办」。' },
-  { re: /^(你是谁|你是什么|介绍下?你自己|你是干嘛的)/, reply: '我是「指南」——一个完全离线的生活决策助手。\n\n我的全部知识来自开源项目《高性价比人生指南》的 34 章、767 条实证建议，每条都标了证据等级和原始出处。我不联网、不调用任何模型，答案都是原文里抽出来并按结构重组的。' },
-  { re: /^(你能做什么|你会什么|有什么功能|怎么用|帮助|help)/i, reply: '你可以问我：\n\n· 具体处境怎么办——「公司不给加班费」「租房押金不退」「刚被裁了」\n· 划不划算——「要不要考公」「养孩子花多少钱」\n· 具体数字——「工伤十级赔多少」「试用期最长多久」\n\n回答会给出：结论、要做的事、关键数字、证据等级和原文出处。想看全文点左上角菜单里的「阅读原文全文」。' },
-  { re: /^(谢谢|感谢|多谢|thx|thanks)/i, reply: '不客气。还有想问的直接说。' },
-  { re: /^(再见|拜拜|bye)/i, reply: '好，需要的时候再来。' },
+  { re: /^(你好|嗨|hi|hello|在吗|在不在)[!！。.~～\s]*$/i, key: 'chat.hi' },
+  { re: /^(你是谁|你是什么|介绍下?你自己|你是干嘛的)/, key: 'chat.who' },
+  { re: /^(你能做什么|你会什么|有什么功能|怎么用|帮助|help)/i, key: 'chat.help' },
+  { re: /^(谢谢|感谢|多谢|thx|thanks)/i, key: 'chat.thanks' },
+  { re: /^(再见|拜拜|bye)/i, key: 'chat.bye' },
   { re: /^(随便|随便来一条|来点啥|有什么推荐)/, special: 'random' },
 ];
 
@@ -185,7 +186,7 @@ export function analyze(question, res, opts = {}) {
   for (const s of SMALLTALK) {
     if (s.re.test(q)) {
       if (s.special === 'random') return { type: 'random' };
-      return { type: 'smalltalk', text: s.reply };
+      return { type: 'smalltalk', text: t(s.key) };
     }
   }
 

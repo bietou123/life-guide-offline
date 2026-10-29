@@ -1,5 +1,6 @@
 import { getItems, search, tokenize, termDf } from './search.js';
 import { findGuide } from './guides.js';
+import { t } from './i18n.js';
 
 function excerpt(value, max = 190) {
   const text = (value || '').trim();
@@ -188,8 +189,8 @@ export function answerQuestion(question, mode = 'fast', previousQuestion = '') {
     && !/屏幕|看电视|户外|近视|视力|牙齿|蛀牙|窝沟/.test(query)) {
     return {
       found: false,
-      lead: '这本指南没有覆盖幼儿园入园或幼小衔接的具体要求。',
-      detail: '报名材料、体检和接种证明等请以当地教育部门及幼儿园通知为准。',
+      lead: t('ans.kgLead'),
+      detail: t('ans.kgDetail'),
       related: [],
     };
   }
@@ -201,7 +202,7 @@ export function answerQuestion(question, mode = 'fast', previousQuestion = '') {
       kind: 'guide',
       guideId: guide.id,
       item: refs[0],
-      lead: guide.lead,
+      lead: t(`guide.${guide.id}`),
       action: refs[0].t,
       points: refs.map((item) => ({
         item,
@@ -209,7 +210,7 @@ export function answerQuestion(question, mode = 'fast', previousQuestion = '') {
         cost: mode === 'deep' ? excerpt(item.cost, 105) : '',
         caution: mode === 'deep' ? excerpt(item.note, 130) : '',
       })),
-      askNext: guide.askNext,
+      askNext: t(`guide.${guide.id}.next`),
       related: refs.slice(1),
     };
   }
@@ -266,8 +267,8 @@ export function answerQuestion(question, mode = 'fast', previousQuestion = '') {
   if ((!domainEvidence && !textualEvidence) || hasUncoveredTopic) {
     return {
       found: false,
-      lead: '这本指南里暂时找不到能直接回答这个问题的条目。',
-      detail: '换一个更具体的关键词试试，或打开目录按主题浏览。不会用不相关的条目编造结论。',
+      lead: t('ans.noneLead'),
+      detail: t('ans.noneDetail'),
       related: [],
     };
   }
