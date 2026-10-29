@@ -6,18 +6,16 @@ import { createIcons, Menu, SquarePen, ArrowLeft, ArrowUp, BookOpen, Search, His
 import { loadData, getItems, search } from './search.js';
 import { answerQuestion, isFollowUp } from './answer.js';
 import { renderMarkdown } from './markdown.js';
+import { initLang, getPref, setPref, applyI18n, t, samples, toQuery } from './i18n.js';
 
 const $ = (selector) => document.querySelector(selector);
 const ICONS = { Menu, SquarePen, ArrowLeft, ArrowUp, BookOpen, Search, History, Shuffle, Trash2, Copy, ChevronRight, ArrowUpRight };
 const STORE_KEY = 'life-guide-conversations-v1';
 const ACTIVE_KEY = 'life-guide-active-conversation-v1';
 const SOURCE = 'https://github.com/eternity4719/HowToLiveBetter';
-const suggestions = [
-  '被裁员了，赔偿该怎么算？',
-  '租房押金不退怎么办？',
-  '长期失眠怎么调整？',
-  '发现自己被骗了该做什么？',
-];
+
+initLang();
+applyI18n();
 
 let book = [];
 let items = [];
@@ -85,7 +83,7 @@ function saveConversations() {
     localStorage.setItem(STORE_KEY, JSON.stringify(conversations.slice(0, 20)));
     localStorage.setItem(ACTIVE_KEY, activeId || '');
   }
-  catch { toast('本机存储空间不足，本次对话无法保存'); }
+  catch { toast(t('store.full')); }
 }
 
 function currentConversation() {
@@ -151,8 +149,8 @@ function openEntry(item) {
 }
 
 function renderSuggestions() {
-  for (const question of suggestions) {
-    const card = button('suggest-card', question, 'arrow-up-right', () => sendQuestion(question));
+  for (const sample of samples()) {
+    const card = button('suggest-card', sample.label, 'arrow-up-right', () => sendQuestion(sample.label, sample.query));
     card.querySelector('svg, i').classList.add('sug-icon');
     card.querySelector('span').className = 'sug-text';
     $('#suggest-grid').append(card);
@@ -185,7 +183,7 @@ function shuffleEntry() {
     if (++ticks < 7) return;
     clearInterval(timer);
     buttons.forEach((node) => node.classList.remove('is-shuffling'));
-    if (label) label.textContent = '随便来一条';
+    if (label) label.textContent = t('lucky.title');
     shuffling = false;
     sendQuestion(randomItem().t);
   }, 85);
@@ -283,9 +281,9 @@ function appendTurn(q, answer, answerMode, animate = false) {
   const stream = createStream(body, animate);
   const meta = el('div', 'ai-meta');
   const metaText = answer.kind === 'guide'
-    ? `${answer.points.length} 条原文 · ${answerMode === 'deep' ? '分析' : '要点'}`
-    : answerMode === 'deep' ? '基于原文的整理' : '原文检索';
-  meta.append(el('span', 'who', '指南'), el('span', 'dot'), el('span', '', metaText));
+    ? t('ans.metaGuide', { n: answer.points.length, kind: answerMode === 'deep' ? t('ans.kindDeep') : t('ans.kindFast') })
+    : answerMode === 'deep' ? t('ans.metaDeepText') : t('ans.metaFastText');
+  meta.append(el('span', 'who', t('ans.who')), el('span', 'dot'), el('span', '', metaText));
   body.append(meta);
 
   let thinking = null;
@@ -297,7 +295,7 @@ function appendTurn(q, answer, answerMode, animate = false) {
 
   if (!answer.found) {
     body.append(stream.add(el('p', 'ans-lead', answer.lead)), stream.add(el('p', 'ans-p', answer.detail)));
-    body.append(stream.add(button('act-btn', '浏览全部目录', 'book-open', openCatalog), 'reveal'));
+    body.append(stream.add(button('act-btn', t('ans.browseAll'), 'book-open', openCatalog), 'reveal'));
   } else if (answer.kind === 'guide') {
     body.append(stream.add(el('h2', 'ans-lead', answer.lead)));
     const points = el('div', 'guide-points');
@@ -308,12 +306,12 @@ function appendTurn(q, answer, answerMode, animate = false) {
       heading.append(stream.add(el('h3', 'guide-title', point.item.t)));
       block.append(heading, stream.add(el('p', 'guide-summary', point.summary)));
       if (answerMode === 'deep') {
-        if (point.cost) addSection(block, '投入', point.cost, stream);
-        if (point.caution) addSection(block, '边界', point.caution, stream);
+        if (point.cost) addSection(block, t('ans.costShort'), point.cost, stream);
+        if (point.caution) addSection(block, t('ans.boundShort'), point.caution, stream);
       }
       const foot = el('div', 'guide-foot');
-      if (point.item.grade) foot.append(el('span', `grade ${point.item.grade.toLowerCase()}`, `证据 ${point.item.grade}`));
-      foot.append(button('ref-link', `${point.item.ch}.${point.item.num} 原文`, 'arrow-up-right', () => openEntry(point.item)));
+      if (point.item.grade) foot.append(el('span', `grade ${point.item.grade.toLowerCase()}`, t('ans.grade', { g: point.item.grade })));
+      foot.append(button('ref-link', t('ans.sourceRef', { ref: `${point.item.ch}.${point.item.num}` }), 'arrow-up-right', () => openEntry(point.item)));
       block.append(stream.add(foot, 'reveal'));
       if (answerMode === 'deep') block.append(stream.add(createSourceDetails(point.item), 'reveal'));
       points.append(block);
@@ -321,11 +319,11 @@ function appendTurn(q, answer, answerMode, animate = false) {
     body.append(points);
     if (answer.askNext) body.append(stream.add(el('p', 'guide-next', answer.askNext)));
     const actions = el('div', 'ans-actions');
-    actions.append(button('act-btn', '复制摘要', 'copy', async () => {
+    actions.append(button('act-btn', t('ans.copySummary'), 'copy', async () => {
       try {
-        await navigator.clipboard.writeText(`${answer.lead}\n${answer.points.map((p) => `${p.item.ch}.${p.item.num} ${p.item.t}\n${p.summary}`).join('\n\n')}\n原文：${SOURCE}`);
-        toast('已复制');
-      } catch { toast('复制失败，请检查剪贴板权限'); }
+        await navigator.clipboard.writeText(`${answer.lead}\n${answer.points.map((p) => `${p.item.ch}.${p.item.num} ${p.item.t}\n${p.summary}`).join('\n\n')}\n${t('ans.sourceLabel')}${SOURCE}`);
+        toast(t('ans.copied'));
+      } catch { toast(t('ans.copyFail')); }
     }));
     body.append(stream.add(actions, 'reveal'));
   } else {
@@ -336,7 +334,7 @@ function appendTurn(q, answer, answerMode, animate = false) {
 
     if (answer.steps && answer.steps.length >= 2) {
       const sec = el('div', 'ans-sec');
-      sec.append(stream.add(el('div', 'ans-sec-h', '可以这么做')));
+      sec.append(stream.add(el('div', 'ans-sec-h', t('ans.steps'))));
       const list = el('ol', 'steps');
       answer.steps.forEach((text, i) => {
         const li = stream.add(el('li', '', text));
@@ -349,7 +347,7 @@ function appendTurn(q, answer, answerMode, animate = false) {
 
     if (answer.numbers && answer.numbers.length) {
       const sec = el('div', 'ans-sec');
-      sec.append(stream.add(el('div', 'ans-sec-h', '关键数字')));
+      sec.append(stream.add(el('div', 'ans-sec-h', t('ans.numbers'))));
       const chips = answer.numbers.filter((num) => !num.ctx);
       const rows = answer.numbers.filter((num) => num.ctx);
       if (chips.length) {
@@ -371,30 +369,30 @@ function appendTurn(q, answer, answerMode, animate = false) {
 
     if (answer.benefit) {
       const sec = el('div', 'ans-sec');
-      sec.append(stream.add(el('div', 'ans-sec-h', '原文依据')));
+      sec.append(stream.add(el('div', 'ans-sec-h', t('ans.basis'))));
       sec.append(stream.add(el('blockquote', 'quote', answer.benefit)));
       body.append(sec);
     }
 
     if (answerMode === 'deep') {
-      addSection(body, '要付出什么', answer.cost, stream);
-      addSection(body, '注意与边界', answer.caution, stream);
+      addSection(body, t('ans.cost'), answer.cost, stream);
+      addSection(body, t('ans.caution'), answer.caution, stream);
     }
 
     const gradeRow = el('div', 'grade-row');
-    if (item.grade) gradeRow.append(el('span', `grade ${item.grade.toLowerCase()}`, `原文证据等级 ${item.grade}`));
+    if (item.grade) gradeRow.append(el('span', `grade ${item.grade.toLowerCase()}`, t('ans.gradeLong', { g: item.grade })));
     gradeRow.append(createSourceDetails(item));
     body.append(stream.add(gradeRow, 'reveal'));
 
     if (answer.related.length) {
       const related = el('div', 'rel');
-      related.append(stream.add(el('div', 'ans-sec-h', '同章相关条目')));
+      related.append(stream.add(el('div', 'ans-sec-h', t('ans.related'))));
       for (const candidate of answer.related) {
         const link = el('button', 'rel-item');
         link.type = 'button';
         link.append(el('span', 'rel-n', `${candidate.ch}.${candidate.num}`));
         const title = el('span', 'rel-t', candidate.t);
-        title.append(el('small', 'rel-ch', `第 ${candidate.ch} 章 · ${candidate.chT}`));
+        title.append(el('small', 'rel-ch', t('ans.relCh', { n: candidate.ch, t: candidate.chT })));
         link.append(title);
         link.addEventListener('click', () => openEntry(candidate));
         related.append(stream.add(link, 'reveal'));
@@ -403,12 +401,12 @@ function appendTurn(q, answer, answerMode, animate = false) {
     }
 
     const actions = el('div', 'ans-actions');
-    actions.append(button('act-btn', '读这条原文', 'book-open', () => openEntry(item)));
-    actions.append(button('act-btn', '复制', 'copy', async () => {
+    actions.append(button('act-btn', t('ans.readSource'), 'book-open', () => openEntry(item)));
+    actions.append(button('act-btn', t('ans.copy'), 'copy', async () => {
       try {
-        await navigator.clipboard.writeText(`${item.t}\n${answer.lead}\n原文：${sourceUrl(item)}`);
-        toast('已复制');
-      } catch { toast('复制失败，请检查剪贴板权限'); }
+        await navigator.clipboard.writeText(`${item.t}\n${answer.lead}\n${t('ans.sourceLabel')}${sourceUrl(item)}`);
+        toast(t('ans.copied'));
+      } catch { toast(t('ans.copyFail')); }
     }));
     body.append(stream.add(actions, 'reveal'));
   }
@@ -427,10 +425,10 @@ function appendTurn(q, answer, answerMode, animate = false) {
 
 function createSourceDetails(item) {
   const details = el('details', 'source-details');
-  details.append(el('summary', 'src-toggle', '原始出处与备注'));
+  details.append(el('summary', 'src-toggle', t('ans.sourceToggle')));
   const content = el('div', 'src-body');
   if (item.src) content.append(el('p', '', item.src));
-  if (item.note) content.append(el('p', '', `原文备注：${item.note}`));
+  if (item.note) content.append(el('p', '', t('ans.note', { n: item.note })));
   for (const raw of new Set((item.src || '').match(/https?:\/\/[^\s<>]+/g) || [])) {
     const url = raw.replace(/[，。；,;]+$/, '');
     const a = el('a', 'src-link', url);
@@ -466,17 +464,19 @@ function renderThread() {
   $('#welcome').hidden = !!conversation?.turns.length;
   if (conversation) {
     conversation.turns.forEach((turn, idx) => {
-      const previous = isFollowUp(turn.q)
+      const query = turn.query || toQuery(turn.q);
+      const previous = isFollowUp(query)
         ? turn.context || conversation.turns.slice(0, idx).reverse().find((old) => !isFollowUp(old.q))?.q || '' : '';
-      appendTurn(turn.q, answerQuestion(turn.q, turn.mode, previous), turn.mode);
+      appendTurn(turn.q, answerQuestion(query, turn.mode, previous ? toQuery(previous) : ''), turn.mode);
     });
   }
   requestAnimationFrame(scrollThread);
 }
 
-function sendQuestion(value) {
+function sendQuestion(value, forcedQuery) {
   const q = value.trim().slice(0, 600);
   if (!q) return;
+  const query = forcedQuery || toQuery(q);
   if (route.screen !== 'chat') navigate({ screen: 'chat' });
   let conversation = currentConversation();
   if (!conversation) {
@@ -484,11 +484,11 @@ function sendQuestion(value) {
     conversations.unshift(conversation);
     activeId = conversation.id;
   }
-  const context = isFollowUp(q)
+  const context = isFollowUp(query)
     ? [...conversation.turns].reverse().find((turn) => !isFollowUp(turn.q))?.q || conversation.turns[0]?.context || ''
     : '';
-  const answer = answerQuestion(q, mode, context);
-  conversation.turns.push({ q, mode, context });
+  const answer = answerQuestion(query, mode, context ? toQuery(context) : '');
+  conversation.turns.push({ q, query, mode, context });
   conversation.turns = conversation.turns.slice(-60);
   conversations = [conversation, ...conversations.filter((c) => c.id !== conversation.id)].slice(0, 20);
   $('#welcome').hidden = true;
@@ -514,7 +514,7 @@ function newConversation() {
 function renderHistoryList() {
   const list = $('#history-list');
   list.replaceChildren();
-  if (!conversations.length) list.append(el('p', 'history-empty', '还没有对话记录'));
+  if (!conversations.length) list.append(el('p', 'history-empty', t('history.empty')));
   for (const conversation of conversations) {
     const row = el('div', 'history-row');
     const entry = el('button', `history-entry${activeId === conversation.id ? ' selected' : ''}`, conversation.title);
@@ -530,11 +530,11 @@ function renderHistoryList() {
     });
     const remove = el('button', 'history-delete');
     remove.type = 'button';
-    remove.setAttribute('aria-label', `删除对话：${conversation.title}`);
-    remove.title = '删除这段对话';
+    remove.setAttribute('aria-label', t('history.deleteNamed', { t: conversation.title }));
+    remove.title = t('history.delete');
     remove.append(icon('trash-2'));
     remove.addEventListener('click', () => {
-      if (!confirm(`删除「${conversation.title}」？`)) return;
+      if (!confirm(t('history.confirm', { t: conversation.title }))) return;
       conversations = conversations.filter((saved) => saved.id !== conversation.id);
       if (activeId === conversation.id) {
         activeId = conversations[0]?.id || null;
@@ -553,9 +553,9 @@ function renderCatalog() {
   const body = $('#reader-body');
   body.replaceChildren();
   const header = el('div', 'catalog-header');
-  header.append(el('h1', '', '高性价比人生指南'), el('p', '', `${book.length} 章 · ${items.length} 条建议`));
+  header.append(el('h1', '', t('catalog.title')), el('p', '', t('catalog.meta', { chapters: book.length, items: items.length })));
   const credit = el('p', 'catalog-credit');
-  const original = el('a', '', '原著 eternity4719');
+  const original = el('a', '', t('catalog.original'));
   original.href = `${SOURCE}`;
   original.target = '_blank';
   original.rel = 'noopener noreferrer';
@@ -563,7 +563,7 @@ function renderCatalog() {
   license.href = 'https://creativecommons.org/licenses/by/4.0/';
   license.target = '_blank';
   license.rel = 'noopener noreferrer';
-  credit.append(original, document.createTextNode(' · '), license, document.createTextNode(' · 本地改编'));
+  credit.append(original, document.createTextNode(' · '), license, document.createTextNode(` · ${t('catalog.adapted')}`));
   header.append(credit);
   body.append(header);
   for (const chapter of book) {
@@ -574,11 +574,11 @@ function renderCatalog() {
     toggle.setAttribute('aria-expanded', 'false');
     toggle.append(el('span', 'ch-num', String(chapter.n).padStart(2, '0')));
     const labels = el('span', 'ch-labels');
-    labels.append(el('span', 'ch-t', chapter.t), el('span', 'ch-d', `${chapterItems.length} 条指南`));
+    labels.append(el('span', 'ch-t', chapter.t), el('span', 'ch-d', t('catalog.entries', { n: chapterItems.length })));
     toggle.append(labels, icon('chevron-right'));
     const entries = el('div', 'chapter-entries');
     entries.hidden = true;
-    entries.append(button('chapter-read', '阅读本章全文', 'book-open', () => navigate({ screen: 'reader', chapter: chapter.n })));
+    entries.append(button('chapter-read', t('reader.readChapter'), 'book-open', () => navigate({ screen: 'reader', chapter: chapter.n })));
     for (const item of chapterItems) {
       const row = el('button', 'chapter-entry');
       row.type = 'button';
@@ -617,9 +617,9 @@ function renderChapter(chapter, entry) {
     if (!item) return;
     heading.id = `entry-${item.num}`;
     heading.classList.add('entry-heading');
-    const ask = button('ask-this', '问这一条', 'arrow-up-right', () => {
+    const ask = button('ask-this', t('reader.askThis'), 'arrow-up-right', () => {
       navigate({ screen: 'chat' });
-      $('#input').value = `关于「${item.t}」，我应该怎么做？`;
+      $('#input').value = t('reader.askThisValue', { t: item.t });
       updateComposer();
       $('#input').focus();
     });
@@ -633,7 +633,7 @@ function renderChapter(chapter, entry) {
 
 function renderReader() {
   const chapter = book.find((b) => b.n === route.chapter);
-  $('#reader-title').textContent = chapter ? `第 ${chapter.n} 章` : '全部指南';
+  $('#reader-title').textContent = chapter ? t('reader.chapter', { n: chapter.n }) : t('reader.all');
   $('#reader-search').hidden = !searchOpen;
   if (searchOpen && $('#reader-search-input').value.trim()) renderReaderResults();
   else if (chapter) renderChapter(chapter, route.entry);
@@ -649,7 +649,9 @@ function renderReaderResults() {
   const ranked = search(query, { topK: 70 });
   const matches = [...new Map([...exact, ...(ranked.top >= 10 ? ranked.items.map((r) => r.item) : [])]
     .map((item) => [item.id, item])).values()].slice(0, 80);
-  body.append(el('p', 'search-count', matches.length ? `找到 ${matches.length}${matches.length === 80 ? '+' : ''} 条相关指南` : '没有匹配的条目，试试其他关键词'));
+  body.append(el('p', 'search-count', matches.length
+    ? t('search.hits', { n: matches.length, more: matches.length === 80 ? '+' : '' })
+    : t('search.none')));
   for (const item of matches) {
     const row = el('button', 'search-result');
     row.type = 'button';
@@ -688,7 +690,7 @@ function wireEvents() {
   $('#btn-lucky').addEventListener('click', shuffleEntry);
   $('#btn-lucky-row').addEventListener('click', shuffleEntry);
   $('#btn-clear').addEventListener('click', () => {
-    if (!confirm('清空本机保存的所有对话？原文不会被删除。')) return;
+    if (!confirm(t('history.clearConfirm'))) return;
     conversations = [];
     activeId = null;
     try {
@@ -698,7 +700,7 @@ function wireEvents() {
     closeDrawer();
     if (route.screen !== 'chat') navigate({ screen: 'chat' });
     renderThread();
-    toast('本地对话已清空');
+    toast(t('history.cleared'));
   });
   $('#input').addEventListener('input', updateComposer);
   $('#input').addEventListener('keydown', (event) => {
@@ -734,8 +736,14 @@ function wireEvents() {
     if (!Capacitor.isNativePlatform()) return;
     event.preventDefault();
     try { await Browser.open({ url }); }
-    catch { toast('无法打开链接，请检查网络连接'); }
+    catch { toast(t('link.fail')); }
   });
+  document.querySelectorAll('.lang-chip').forEach((chip) => chip.addEventListener('click', () => {
+    const value = chip.dataset.lang;
+    if (value === getPref()) return;
+    setPref(value);
+    location.reload();
+  }));
   if (Capacitor.isNativePlatform()) App.addListener('backButton', back);
 }
 
@@ -752,6 +760,12 @@ async function boot() {
       chip.classList.toggle('is-on', chip.dataset.mode === mode);
       chip.setAttribute('aria-pressed', String(chip.dataset.mode === mode));
     });
+    document.querySelectorAll('.lang-chip').forEach((chip) => {
+      const on = chip.dataset.lang === getPref();
+      chip.classList.toggle('is-on', on);
+      chip.setAttribute('aria-pressed', String(on));
+    });
+    $('#drawer-chapters').textContent = t('drawer.chapters', { n: book.length });
     history.replaceState({ guide: true, screen: 'chat' }, '', location.pathname + location.search + '#chat');
     renderSuggestions();
     wireEvents();
@@ -762,8 +776,8 @@ async function boot() {
   } catch (error) {
     console.error('Guide failed to start', error);
     const bootScreen = $('#boot');
-    bootScreen.replaceChildren(el('p', 'boot-text', '本地内容加载失败，请重新打开应用'));
-    bootScreen.append(button('boot-retry', '重试', null, () => location.reload()));
+    bootScreen.replaceChildren(el('p', 'boot-text', t('boot.fail')));
+    bootScreen.append(button('boot-retry', t('boot.retry'), null, () => location.reload()));
   }
 }
 

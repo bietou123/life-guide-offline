@@ -1,6 +1,6 @@
 {
   "name": "life-guide-app",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "人生指南 · 离线实证生活决策助手（基于《高性价比人生指南》767 条建议）",
   "private": true,
   "type": "module",

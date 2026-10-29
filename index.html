@@ -14,20 +14,20 @@
   <div class="boot-logo">
     <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 2.6 14.5 9.5 21.4 12 14.5 14.5 12 21.4 9.5 14.5 2.6 12 9.5 9.5 12 2.6Z" fill="currentColor"/></svg>
   </div>
-  <div class="boot-text">正在装载 767 条指南…</div>
+  <div class="boot-text" data-i18n="boot.loading">正在装载 767 条指南…</div>
 </div>
 
 <div id="app" hidden>
   <!-- ===== 聊天页 ===== -->
   <section class="screen screen-chat is-active" id="screen-chat">
     <header class="topbar">
-      <button class="icon-btn" id="btn-menu" aria-label="菜单" title="菜单">
+      <button class="icon-btn" id="btn-menu" aria-label="菜单" title="菜单" data-i18n-aria="app.menu">
         <i data-lucide="menu"></i>
       </button>
       <div class="brand">
-        <span class="brand-name">指南</span>
+        <span class="brand-name" data-i18n="app.title">指南</span>
       </div>
-      <button class="icon-btn" id="btn-new" aria-label="新对话" title="新对话">
+      <button class="icon-btn" id="btn-new" aria-label="新对话" title="新对话" data-i18n-aria="app.new">
         <i data-lucide="square-pen"></i>
       </button>
     </header>
@@ -37,13 +37,13 @@
         <div class="welcome-logo">
           <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="M12 2.6 14.5 9.5 21.4 12 14.5 14.5 12 21.4 9.5 14.5 2.6 12 9.5 9.5 12 2.6Z" fill="currentColor"/></svg>
         </div>
-        <h1 class="welcome-title">有什么想弄明白的？</h1>
-        <p class="welcome-sub">从《高性价比人生指南》767 条建议里找答案<br/>离线可用 · 可回到每条原文</p>
+        <h1 class="welcome-title" data-i18n="welcome.title">有什么想弄明白的？</h1>
+        <p class="welcome-sub" data-i18n-html="welcome.sub">从《高性价比人生指南》767 条建议里找答案<br/>离线可用 · 可回到每条原文</p>
         <button class="lucky-btn" id="btn-lucky" type="button">
           <span class="lucky-icon"><i data-lucide="shuffle"></i></span>
           <span class="lucky-copy">
-            <span class="lucky-text">随便来一条</span>
-            <span class="lucky-sub">从 767 条建议里随机抽一条</span>
+            <span class="lucky-text" data-i18n="lucky.title">随便来一条</span>
+            <span class="lucky-sub" data-i18n="lucky.sub">从 767 条建议里随机抽一条</span>
           </span>
           <span class="lucky-go"><i data-lucide="chevron-right"></i></span>
         </button>
@@ -54,21 +54,21 @@
 
     <div class="composer-wrap">
       <div class="mode-row">
-        <div class="mode-segments" role="group" aria-label="回答模式">
-          <button class="mode-chip is-on" data-mode="fast" aria-pressed="true">检索</button>
-          <button class="mode-chip" data-mode="deep" aria-pressed="false">分析</button>
+        <div class="mode-segments" role="group" aria-label="回答模式" data-i18n-aria="mode.label">
+          <button class="mode-chip is-on" data-mode="fast" aria-pressed="true" data-i18n="mode.fast">检索</button>
+          <button class="mode-chip" data-mode="deep" aria-pressed="false" data-i18n="mode.deep">分析</button>
         </div>
-        <button class="lucky-chip" id="btn-lucky-row" type="button" aria-label="随便来一条">
-          <i data-lucide="shuffle"></i><span>随便一条</span>
+        <button class="lucky-chip" id="btn-lucky-row" type="button" aria-label="随便来一条" data-i18n-aria="lucky.chip">
+          <i data-lucide="shuffle"></i><span data-i18n="lucky.chip">随便一条</span>
         </button>
-        <span class="mode-hint">完全离线</span>
+        <span class="mode-hint" data-i18n="mode.hint">完全离线</span>
       </div>
       <div class="composer" id="composer">
-        <button class="attach-btn" id="btn-attach" aria-label="打开原文目录" title="打开原文目录">
+        <button class="attach-btn" id="btn-attach" aria-label="打开原文目录" title="打开原文目录" data-i18n-aria="composer.attach">
           <i data-lucide="book-open"></i>
         </button>
-        <textarea id="input" rows="1" placeholder="问点什么…" enterkeyhint="send" autocomplete="off"></textarea>
-        <button class="send-btn" id="btn-send" aria-label="发送" title="发送" disabled>
+        <textarea id="input" rows="1" placeholder="问点什么…" enterkeyhint="send" autocomplete="off" data-i18n-ph="composer.placeholder"></textarea>
+        <button class="send-btn" id="btn-send" aria-label="发送" title="发送" disabled data-i18n-aria="composer.send">
           <i data-lucide="arrow-up"></i>
         </button>
       </div>
@@ -78,16 +78,16 @@
   <!-- ===== 原文页 ===== -->
   <section class="screen screen-reader" id="screen-reader">
     <header class="topbar">
-      <button class="icon-btn" id="btn-reader-back" aria-label="返回" title="返回">
+      <button class="icon-btn" id="btn-reader-back" aria-label="返回" title="返回" data-i18n-aria="reader.back">
         <i data-lucide="arrow-left"></i>
       </button>
-      <div class="brand"><span class="brand-name" id="reader-title">原文</span></div>
-      <button class="icon-btn" id="btn-reader-search" aria-label="搜索原文" title="搜索原文">
+      <div class="brand"><span class="brand-name" id="reader-title" data-i18n="reader.title">原文</span></div>
+      <button class="icon-btn" id="btn-reader-search" aria-label="搜索原文" title="搜索原文" data-i18n-aria="reader.search">
         <i data-lucide="search"></i>
       </button>
     </header>
     <div class="reader-search" id="reader-search" hidden>
-      <input id="reader-search-input" type="search" placeholder="搜索原文内容…" autocomplete="off" />
+      <input id="reader-search-input" type="search" placeholder="搜索原文内容…" autocomplete="off" data-i18n-ph="reader.searchPh" />
     </div>
     <main class="reader-body" id="reader-body"></main>
   </section>
@@ -100,32 +100,40 @@
         <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2.6 14.5 9.5 21.4 12 14.5 14.5 12 21.4 9.5 14.5 2.6 12 9.5 9.5 12 2.6Z" fill="currentColor"/></svg>
       </div>
       <div>
-        <div class="drawer-title">指南</div>
-        <div class="drawer-sub">离线实证生活决策助手</div>
+        <div class="drawer-title" data-i18n="app.title">指南</div>
+        <div class="drawer-sub" data-i18n="drawer.sub">离线实证生活决策助手</div>
       </div>
     </div>
     <nav class="drawer-nav">
       <button class="drawer-item" id="btn-open-reader">
         <i data-lucide="book-open"></i>
-        <span>原文与全部目录</span><em>34 章</em>
+        <span data-i18n="drawer.reader">原文与全部目录</span><em id="drawer-chapters">34 章</em>
       </button>
       <button class="drawer-item" id="btn-open-history">
         <i data-lucide="history"></i>
-        <span>历史对话</span>
+        <span data-i18n="drawer.history">历史对话</span>
       </button>
       <div class="history-list" id="history-list" hidden></div>
       <button class="drawer-item" id="btn-random">
         <i data-lucide="shuffle"></i>
-        <span>随便来一条</span>
+        <span data-i18n="drawer.random">随便来一条</span>
       </button>
+      <div class="lang-block">
+        <div class="lang-label" data-i18n="drawer.lang">语言</div>
+        <div class="lang-segments" role="group" aria-label="语言" data-i18n-aria="drawer.lang">
+          <button class="lang-chip" type="button" data-lang="system" data-i18n="drawer.langSystem">跟随系统</button>
+          <button class="lang-chip" type="button" data-lang="zh" data-i18n="drawer.langZh">中文</button>
+          <button class="lang-chip" type="button" data-lang="en">English</button>
+        </div>
+      </div>
       <button class="drawer-item danger" id="btn-clear">
         <i data-lucide="trash-2"></i>
-        <span>清空本地记录</span>
+        <span data-i18n="drawer.clear">清空本地记录</span>
       </button>
     </nav>
     <div class="drawer-foot">
-      <p>原著 <a id="source-link" href="https://github.com/eternity4719/HowToLiveBetter">eternity4719 / HowToLiveBetter</a><br/>原文 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · 本应用为改编 · 全部计算在本机完成</p>
-      <p class="ver">v1.0.7</p>
+      <p><span data-i18n="foot.original">原著</span> <a id="source-link" href="https://github.com/eternity4719/HowToLiveBetter">eternity4719 / HowToLiveBetter</a><br/><span data-i18n="foot.license">原文</span> <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <span data-i18n="foot.adapted">本应用为改编 · 全部计算在本机完成</span></p>
+      <p class="ver">v1.1.0</p>
     </div>
   </aside>
 </div>

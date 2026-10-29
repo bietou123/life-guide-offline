@@ -6,6 +6,7 @@
 
 - 在 [Releases](https://github.com/bietou123/life-guide-offline/releases) 下载 APK，安装后不需要注册或联网。
 - 界面跟随系统的深色 / 浅色模式切换，不需要单独设置。主界面的「随便来一条」会先滚动抽签，再从 767 条里随机给出一条原文。
+- 界面支持中文 / English 切换，入口在菜单里的「语言」。默认跟随系统，切换后立即生效并记住选择。原文是中文，英文模式只翻译界面与回答框架，引用内容仍是中文原文；英文提问会先映射成对应的中文问法再检索。
 - 问题尽量描述具体处境，例如“租房押金不退怎么办”。“检索”突出原文要点；“分析”补充原文中的投入、收益依据和适用边界。较宽泛的问题会同时引用多条原文；切换模式可立即重排当前回答。
 - 回答像对话一样逐字流出来：先显示检索中的跳动点，再分段打字、逐块淡入；历史记录重新打开时直接显示全文，不重播动画。系统开启“减少动态效果”时同样直接显示。
 - 输入栏左侧的书本图标可打开全文与目录，回答中的原文编号可定位到对应条目；目录支持全文搜索。右上角按钮可开启新对话，历史记录支持逐条删除。
@@ -33,14 +34,14 @@ UI 测试使用 `puppeteer-core`，需要安装 Chrome；`CHROME_PATH` 可以指
 
 ## Android APK
 
-需要 JDK 17 和 Android SDK Platform 34、Build Tools 34、Platform Tools；设置 `JAVA_HOME` 和 `ANDROID_HOME` 后执行：
+需要 JDK 17 和 Android SDK Platform 36、Build Tools 36、Platform Tools；设置 `JAVA_HOME` 和 `ANDROID_HOME` 后执行：
 
 ```sh
 npm run sync
 npm run apk
 ```
 
-Windows 上构建出的调试 APK 位于 `android/app/build/outputs/apk/debug/app-debug.apk`。如需生成可持续更新的正式包，在本机设置 `LIFE_GUIDE_KEYSTORE`（私有密钥的绝对路径）、`LIFE_GUIDE_KEYPASS` 和 `LIFE_GUIDE_KEYALIAS`，再在 `android/` 运行 `./gradlew.bat assembleRelease`。正式包位于 `android/app/build/outputs/apk/release/`。仓库不包含 Android SDK、JDK、签名材料或构建缓存；更新同一应用时必须保管好同一密钥。发行页自 v1.0.2 起使用独立的正式签名；v1.0.0 / v1.0.1 的调试签名包不能直接覆盖升级，卸载旧版会删除其中的本地对话记录。
+Windows 上构建出的调试 APK 位于 `android/app/build/outputs/apk/debug/app-debug.apk`。如需生成可持续更新的正式包，在本机设置 `LIFE_GUIDE_KEYSTORE`（私有密钥的绝对路径）、`LIFE_GUIDE_KEYPASS` 和 `LIFE_GUIDE_KEYALIAS`，再在 `android/` 运行 `./gradlew.bat assembleRelease`（上架用 `.aab` 则运行 `bundleRelease`）。正式包位于 `android/app/build/outputs/apk/release/`，AAB 位于 `android/app/build/outputs/bundle/release/`。仓库不包含 Android SDK、JDK、签名材料或构建缓存；更新同一应用时必须保管好同一密钥。发行页自 v1.0.2 起使用独立的正式签名；v1.0.0 / v1.0.1 的调试签名包不能直接覆盖升级，卸载旧版会删除其中的本地对话记录。
 
 ## 原作、署名与许可
 
